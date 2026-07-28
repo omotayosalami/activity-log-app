@@ -37,6 +37,7 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.popup import Popup
 from kivy.clock import Clock
 from kivy.utils import platform
+from kivy.metrics import dp, sp
 
 DB_FILE = "activity_log.db"
 ITERATIONS = 100_000
@@ -257,17 +258,21 @@ def totals(conn):
 
 def field(hint, password=False, multiline=False):
     return TextInput(hint_text=hint, password=password, multiline=multiline,
-                      size_hint_y=None, height=48, font_size=16)
+                      size_hint_y=None, height=dp(56), font_size=sp(18),
+                      padding=[dp(12), dp(16), dp(12), dp(16)])
 
 
 def styled_button(text, callback, bg=(0.2, 0.4, 0.75, 1)):
-    btn = Button(text=text, size_hint_y=None, height=52, background_color=bg)
+    btn = Button(text=text, size_hint_y=None, height=dp(56), background_color=bg,
+                 font_size=sp(18))
     btn.bind(on_release=callback)
     return btn
 
 
 def info_popup(title, message):
-    Popup(title=title, content=Label(text=message), size_hint=(0.85, 0.4)).open()
+    Popup(title=title, title_size=sp(18),
+          content=Label(text=message, font_size=sp(16)),
+          size_hint=(0.9, 0.4)).open()
 
 
 # ---------------------- Screens ----------------------
@@ -275,8 +280,9 @@ def info_popup(title, message):
 class CreatePasswordScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        layout = BoxLayout(orientation="vertical", padding=24, spacing=12)
-        layout.add_widget(Label(text="Create Your Password", font_size=22, size_hint_y=None, height=50))
+        layout = BoxLayout(orientation="vertical", padding=dp(24), spacing=dp(16))
+        layout.add_widget(Label(text="Create Your Password", font_size=sp(26),
+                                 size_hint_y=None, height=dp(60)))
 
         self.pw1 = field("New password", password=True)
         self.pw2 = field("Confirm password", password=True)
@@ -310,8 +316,9 @@ class CreatePasswordScreen(Screen):
 class LoginScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        layout = BoxLayout(orientation="vertical", padding=24, spacing=12)
-        layout.add_widget(Label(text="Activity Log Login", font_size=22, size_hint_y=None, height=50))
+        layout = BoxLayout(orientation="vertical", padding=dp(24), spacing=dp(16))
+        layout.add_widget(Label(text="Activity Log Login", font_size=sp(26),
+                                 size_hint_y=None, height=dp(60)))
         self.pw = field("Password", password=True)
         layout.add_widget(self.pw)
         layout.add_widget(styled_button("Log In", self.do_login))
@@ -340,9 +347,11 @@ class LoginScreen(Screen):
 class ForgotPasswordScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        layout = BoxLayout(orientation="vertical", padding=24, spacing=12)
-        layout.add_widget(Label(text="Forgot Password", font_size=22, size_hint_y=None, height=50))
-        layout.add_widget(Label(text="Enter your recovery keyword", size_hint_y=None, height=30))
+        layout = BoxLayout(orientation="vertical", padding=dp(24), spacing=dp(16))
+        layout.add_widget(Label(text="Forgot Password", font_size=sp(26),
+                                 size_hint_y=None, height=dp(60)))
+        layout.add_widget(Label(text="Enter your recovery keyword", font_size=sp(16),
+                                 size_hint_y=None, height=dp(36)))
         self.kw = field("Recovery keyword")
         layout.add_widget(self.kw)
         layout.add_widget(styled_button("Verify Keyword", self.verify, bg=(0.85, 0.42, 0, 1)))
@@ -368,8 +377,9 @@ class ForgotPasswordScreen(Screen):
 class ResetPasswordScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        layout = BoxLayout(orientation="vertical", padding=24, spacing=12)
-        layout.add_widget(Label(text="Set New Password", font_size=22, size_hint_y=None, height=50))
+        layout = BoxLayout(orientation="vertical", padding=dp(24), spacing=dp(16))
+        layout.add_widget(Label(text="Set New Password", font_size=sp(26),
+                                 size_hint_y=None, height=dp(60)))
         self.pw1 = field("New password", password=True)
         self.pw2 = field("Confirm password", password=True)
         layout.add_widget(self.pw1)
@@ -397,7 +407,7 @@ class DashboardScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.row_checks = {}  # log_id -> checkbox
-        self.layout = BoxLayout(orientation="vertical", padding=12, spacing=8)
+        self.layout = BoxLayout(orientation="vertical", padding=dp(16), spacing=dp(10))
         self.add_widget(self.layout)
 
     def on_pre_enter(self, *_):
@@ -410,14 +420,14 @@ class DashboardScreen(Screen):
 
         count, minutes = totals(app.conn)
         self.layout.add_widget(Label(text=f"Total Logins: {count}   |   Active Minutes: {minutes}",
-                                      size_hint_y=None, height=30, font_size=13))
+                                      size_hint_y=None, height=dp(34), font_size=sp(15)))
 
-        self.timer_label = Label(text="Session time: 00:00:00", font_size=18,
-                                  size_hint_y=None, height=36)
+        self.timer_label = Label(text="Session time: 00:00:00", font_size=sp(22),
+                                  size_hint_y=None, height=dp(44))
         self.layout.add_widget(self.timer_label)
 
-        self.current_app_label = Label(text="Currently active app: —", font_size=12,
-                                        size_hint_y=None, height=28)
+        self.current_app_label = Label(text="Currently active app: —", font_size=sp(14),
+                                        size_hint_y=None, height=dp(32))
         self.layout.add_widget(self.current_app_label)
 
         if IS_ANDROID and not has_usage_access():
@@ -429,17 +439,17 @@ class DashboardScreen(Screen):
         self.layout.add_widget(styled_button("Log Out", lambda *_: app.logout(), bg=(0.78, 0.16, 0.16, 1)))
 
         self.layout.add_widget(Label(text="Activity History (tap a row to select)",
-                                      size_hint_y=None, height=30, font_size=14))
+                                      size_hint_y=None, height=dp(36), font_size=sp(16)))
 
         scroll = ScrollView(size_hint=(1, 1))
-        self.grid = GridLayout(cols=1, size_hint_y=None, spacing=4)
+        self.grid = GridLayout(cols=1, size_hint_y=None, spacing=dp(6))
         self.grid.bind(minimum_height=self.grid.setter("height"))
         scroll.add_widget(self.grid)
         self.layout.add_widget(scroll)
 
         self.refresh_logs()
 
-        btn_row = BoxLayout(size_hint_y=None, height=52, spacing=8)
+        btn_row = BoxLayout(size_hint_y=None, height=dp(56), spacing=dp(10))
         btn_row.add_widget(styled_button("View Details", self.view_details, bg=(0.2, 0.4, 0.75, 1)))
         btn_row.add_widget(styled_button("Delete Selected", self.delete_selected, bg=(0.4, 0.4, 0.4, 1)))
         self.layout.add_widget(btn_row)
@@ -451,13 +461,13 @@ class DashboardScreen(Screen):
         for log_id, login_time, logout_time, duration in fetch_logs(app.conn):
             logout_display = logout_time if logout_time else "Active"
             duration_display = duration if duration is not None else "-"
-            row = BoxLayout(size_hint_y=None, height=44, spacing=6)
-            chk = CheckBox(size_hint_x=None, width=36)
+            row = BoxLayout(size_hint_y=None, height=dp(56), spacing=dp(8))
+            chk = CheckBox(size_hint_x=None, width=dp(48))
             self.row_checks[log_id] = chk
             row.add_widget(chk)
             row.add_widget(Label(
                 text=f"#{log_id}  {login_time} -> {logout_display}  ({duration_display} min)",
-                font_size=11, halign="left", valign="middle", text_size=(None, 44)
+                font_size=sp(14), halign="left", valign="middle", text_size=(dp(280), dp(56))
             ))
             self.grid.add_widget(row)
 
@@ -496,24 +506,25 @@ class DashboardScreen(Screen):
             rows = fetch_activity_details(app.conn, log_id)
             note = None
 
-        content = BoxLayout(orientation="vertical", padding=10, spacing=6)
+        content = BoxLayout(orientation="vertical", padding=dp(14), spacing=dp(10))
         if note:
-            content.add_widget(Label(text=note, size_hint_y=None, height=24, font_size=11))
+            content.add_widget(Label(text=note, size_hint_y=None, height=dp(30), font_size=sp(13)))
         if not rows:
             msg = "No app activity recorded yet." if IS_ANDROID and has_usage_access() else \
                   "No app activity recorded.\nMake sure Usage Access is granted."
-            content.add_widget(Label(text=msg))
+            content.add_widget(Label(text=msg, font_size=sp(15)))
         else:
             scroll = ScrollView()
-            grid = GridLayout(cols=1, size_hint_y=None, spacing=4)
+            grid = GridLayout(cols=1, size_hint_y=None, spacing=dp(6))
             grid.bind(minimum_height=grid.setter("height"))
             for label, pkg, minutes in rows:
                 grid.add_widget(Label(text=f"{label} ({pkg}) - {minutes} min",
-                                       size_hint_y=None, height=32, font_size=12))
+                                       size_hint_y=None, height=dp(40), font_size=sp(14)))
             scroll.add_widget(grid)
             content.add_widget(scroll)
 
-        popup = Popup(title=f"Details - Session #{log_id}", content=content, size_hint=(0.9, 0.7))
+        popup = Popup(title=f"Details - Session #{log_id}", title_size=sp(17),
+                      content=content, size_hint=(0.92, 0.75))
         popup.open()
 
 
